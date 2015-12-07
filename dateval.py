@@ -37,12 +37,10 @@ class SolrDaterange(object):
         m = re.match(cls.dateregex, dat)
         if not m:
             raise Invalid("{} is not a valid date".format(dat))
-        print("GROUPDICT: {}".format(m.groupdict()))
         return(m.groupdict())
 
     @classmethod
     def _val_month_day(cls, datedict):
-        print("DATEDICT {}".format(datedict))
         if datedict['wildcard'] == '*':
             return('*')
         intyear = int(datedict['year'])
@@ -73,7 +71,6 @@ class SolrDaterange(object):
         
     @classmethod
     def _valtime(cls, tim):
-        print("TIM: {}".format(tim))
         m = re.match(cls.timeregex, tim)
         if not m:
             raise Invalid("{} is not a valid time.".format(tim))
@@ -114,7 +111,6 @@ class SolrDaterange(object):
         dates = cls._split_explicit_range(datestr)
         for timestamp in dates:
             dat, tim = cls._split_dt(timestamp)
-            print("DAT: {}".format(dat))
             valid.append(cls._val_month_day(cls._val_date(dat)))
             if tim:
                 v_time = cls._valhour_min_sec(cls._valtime(tim))
@@ -125,7 +121,6 @@ class SolrDaterange(object):
             valid = valid[0]
         else:
             raise Invalid("Something went horribly wrong.")
-        print("VALID: {}".format(valid))
         return(valid)
             
 
