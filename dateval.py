@@ -8,7 +8,7 @@ class SolrDaterange(object):
     '''
     
     dateregex = '^(?P<year>-?\d{4,})(-(?P<month>\d{2})(-(?P<day>\d{2}))?)?$|^(?P<wildcard>\*)$'
-    timeregex = '^(?P<hours>\d{2})(:(?P<mins>\d{2})(:(?P<secs>\d{2}(\.\d+)?Z))?)?$'
+    timeregex = '^(?P<hours>\d{2})(:(?P<mins>\d{2})(:(?P<secs>\d{2}(\.\d+)?Z?))?)?$'
     expli_dateregex = '^(?P<start>.*) TO (?P<end>.*)$'
 
     @classmethod
@@ -44,14 +44,17 @@ class SolrDaterange(object):
     def _val_month_day(cls, datedict):
         print("DATEDICT {}".format(datedict))
         if datedict['wildcard'] == '*':
-            return()
+            return('*')
         intyear = int(datedict['year'])
+        v_date = datedict['year']
         try:
             intmonth = int(datedict['month'])
+            v_date += "-" + datedict['month']
         except TypeError:
             intmonth = None
         try:
             intday = int(datedict['day'])
+            v_date += "-" + datedict['day']
         except TypeError:
             intday = None
         if ((datedict['year'].startswith('0') and len(datedict['year'])) > 4 or
@@ -65,6 +68,8 @@ class SolrDaterange(object):
             raise Invalid("{} is not a valid month.".format(datedict['month']))
         if not (intday is None or 1 <= intday <= maxdays[intmonth - 1]):
             raise Invalid("{} is not a valid day.".format(datedict['day']))
+        return(v_date)
+
         
     @classmethod
     def _valtime(cls, tim):
@@ -77,15 +82,21 @@ class SolrDaterange(object):
     @classmethod
     def _valhour_min_sec(cls, timedict):
         inthour = int(timedict["hours"])
+        v_time = timedict["hours"]
         try:
             intmins = int(timedict["mins"])
+            v_time += ":" + timedict["mins"]
         except TypeError:
             intmins = None;
         secs = timedict["secs"]
         if secs is None:
             intsecs = None
         else:
-            intsecs = float(timedict["secs"][0:-1])
+            if secs[-1] != "Z":
+                intsecs = float(secs)
+            else:
+                intsecs = float(secs[0:-1])
+                v_time += ":" + secs
         if inthour == 24 and ((intmins > 0 and not intmins is None) or
                               (intsecs > 0 and not intsecs is None)):
             raise Invalid("{} is not a valid hour".format(timedict["hours"]))
@@ -95,14 +106,26 @@ class SolrDaterange(object):
             raise Invalid("{} are not valid minutes".format(timedict["mins"]))
         if intsecs is not None and not (0 <= intsecs < 60.):
             raise Invalid("{} are not valid seconds".format(timedict["secs"]))
-        return()
+        return(v_time)
  
     @classmethod
     def validate(cls, datestr):
+        valid = []
         dates = cls._split_explicit_range(datestr)
         for timestamp in dates:
             dat, tim = cls._split_dt(timestamp)
             print("DAT: {}".format(dat))
-            cls._val_month_day(cls._val_date(dat))
+            valid.append(cls._val_month_day(cls._val_date(dat)))
             if tim:
-                cls._valhour_min_sec(cls._valtime(tim))
+                v_time = cls._valhour_min_sec(cls._valtime(tim))
+                valid[-1] += 'T' + v_time
+        if len(valid) == 2:
+            valid = "[" + valid[0] + " TO " + valid[1] + "]"
+        elif len(valid) == 1:
+            valid = valid[0]
+        else:
+            raise Invalid("Something went horribly wrong.")
+        print("VALID: {}".format(valid))
+        return(valid)
+            
+
