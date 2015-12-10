@@ -12,18 +12,18 @@ class SolrDaterange(object):
                   }
     
     regex_implicit_range = (
-        regex_elem['year'] +
+        '(' + regex_elem['year'] +
         '(-' + regex_elem['month'] +
         '(-' + regex_elem['day'] +
         '(T' + regex_elem['hour'] +
         '(:' + regex_elem['minute'] +
         '(:' + regex_elem['second'] +
-        ')?)?)?)?)?'
+        ')?)?)?)?)?|(?P<wildcard>\*))'
     )
 
     regex_explicit_range = (
-        '^\[(?P<start>[\-TZ:\.\d]{4,})' +
-        ' TO (?P<end>[\-TZ:\.\d]{4,})\]$')
+        '^\[(?P<start>[\-TZ:\.\d]{4,}|\*)' +
+        ' TO (?P<end>[\-TZ:\.\d]{4,}|\*)\]$')
     
     @staticmethod
     def _solregex(regex):
@@ -52,12 +52,15 @@ class SolrDaterange(object):
     
     @classmethod
     def validate(cls, datestr):
+        print("VALIDATE: {}".format(datestr))
         parsed = {}
         try:
             d = re.match(cls.regex_explicit_range, datestr).groupdict()
         except AttributeError:
+            print("VALIDATE implicit")
             parsed['implicit'] = cls.check_implicit_range(datestr)
         else:
+            print("VALIDATE start - end")
             parsed['start'] = cls.check_implicit_range(d['start'])
             parsed['end'] = cls.check_implicit_range(d['end'])
         return(parsed)
@@ -89,7 +92,8 @@ class TestSolrDaterange(object):
                           '0638-10-35T23:59:12.23']
 
     pas_explicit_range = ['[2016 TO 2020]', '[-72354393-01-35T15:00 TO 1000]',
-                          '[0638-10-35T23:59:12.543Z TO 45919-12-35T00]']
+                          '[0638-10-35T23:59:12.543Z TO 45919-12-35T00]',
+                          '[* TO 2020]', '[-72354393-01-35T15:00 TO *]']
     fail_explicit_range = ['2016 TO 2020', '[-72354393-01-35T15:00 TO1000]',
                            '[0638-10-35T23:59:12.543Z TO 45919-12-35T00',
                            '2016 T 2020']
