@@ -1,4 +1,4 @@
-from dateval import *
+from ckanext.eaw_vocabularies.dateval import SolrDaterange
 
 def test_split_explicit_range():
     calibration = [('jsagdh', 'kjsd8'), ('jsdgh', ), ('2016-12-01:02:03.55', ),
