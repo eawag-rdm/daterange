@@ -3,31 +3,32 @@ from nose.tools import *
 
 class SolrDaterange(object):
 
-    regex_elem = {'year': '(?P<year>-?(0\d{3}|[1-9]\d{3,}))',
-                  'month': '(?P<month>\d{2})',
-                  'day': '(?P<day>\d{2})',
-                  'hour': '(?P<hour>([01][0-9]|2[0-3]))',
-                  'minute': '(?P<minute>[0-5][0-9])',
-                  'second': '(?P<second>[0-5][0-9](\.\d{1,3})?Z)'
+    regex_elem = {'year': r'(?P<year>-?(0\d{3}|[1-9]\d{3,}))',
+                  'month': r'(?P<month>\d{2})',
+                  'day': r'(?P<day>\d{2})',
+                  'hour': r'(?P<hour>([01][0-9]|2[0-3]))',
+                  'minute': r'(?P<minute>[0-5][0-9])',
+                  'second': r'(?P<second>[0-5][0-9](\.\d{1,3})?Z)'
                   }
     
-    regex_implicit_range = (
-        '(' + regex_elem['year'] +
+    regex_implicit_range = re.compile(
+        '^(' + regex_elem['year'] +
         '(-' + regex_elem['month'] +
         '(-' + regex_elem['day'] +
         '(T' + regex_elem['hour'] +
         '(:' + regex_elem['minute'] +
         '(:' + regex_elem['second'] +
-        ')?)?)?)?)?|(?P<wildcard>\*))'
+        r')?)?)?)?)?|(?P<wildcard>\*))$'
     )
 
-    regex_explicit_range = (
-        '^\[(?P<start>[\-TZ:\.\d]{4,}|\*)' +
-        ' TO (?P<end>[\-TZ:\.\d]{4,}|\*)\]$')
+    regex_explicit_range = re.compile(
+        r'^\[(?P<start>[\-TZ:\.\d]{4,}|\*)' +
+        r' TO (?P<end>[\-TZ:\.\d]{4,}|\*)\]$'
+    )
     
     @staticmethod
     def _solregex(regex):
-        return('^' + regex + '$')
+        return(re.compile('^' + regex + '$'))
     
     @classmethod
     def check_date_element(cls, typ, elemstr):
@@ -43,7 +44,7 @@ class SolrDaterange(object):
 
     @classmethod
     def check_implicit_range(cls, rangestr):
-        matchres = re.match(cls._solregex(cls.regex_implicit_range), rangestr)
+        matchres = re.match(cls.regex_implicit_range, rangestr)
         if matchres is None:
             raise ValueError("{}: not a valid DateRange - field"
                              .format(rangestr))
