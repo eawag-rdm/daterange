@@ -19,10 +19,10 @@ Notes on its interpretation:
 from validate_solr_daterange import SolrDaterange
 
 datestr = '[-0324-12-31T00:07:34.123Z TO 2016]' #passes
-SolrDatrange.validate(datestr)
+SolrDaterange.validate(datestr)
 
-datestr = '[-324-12-31T00:07:34.123Z TO 2016-12-]' #fails
-SolrDatrange.validate(datestr)
+datestr = '[-0324-12-31T00:07:34.123Z TO 2016-12-]' #fails
+SolrDaterange.validate(datestr)
 ~~~
 
 # Tests
