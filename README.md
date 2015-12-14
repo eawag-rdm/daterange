@@ -10,7 +10,6 @@ Notes on its interpretation:
 + Points in time, i.e. not truncated or "implicit" ranges    
 	have to end with character "Z", indicating UTC.
 + "hh" for hours run from 00 to 23.
-+ This validator checks for valid dates considering leap years.
 
 This validator checks for valid dates considering leap years.
 
